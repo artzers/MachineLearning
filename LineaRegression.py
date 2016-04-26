@@ -1,20 +1,41 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 class LinearRegression:
     def __init__(self):
         pass
 
-    def GenerateGaussianDistribute(self, sigma, x):
+    def LinearRegressionDemo(self, eleNum, trueQuadraticPoly, trainSampleNum, trainInterval):
+        trainingData = self._GenerateQuadraticData(trueQuadraticPoly, \
+                                                    trainSampleNum, trainInterval, eleNum)
+        regPoly, regData = self.QuadraticLinearRegression(trainingData, eleNum)
+        print regPoly
+        trueData = np.zeros((trainInterval[1] - trainInterval[0]+1, 2), trainingData.dtype)
+        for i in xrange(trainInterval[0], trainInterval[1]+1):
+            trueData[i - trainInterval[0], 0] = i
+            y = 0
+            for k in xrange(0, len(trueQuadraticPoly)):
+                y += trueQuadraticPoly[k] * i ** (len(trueQuadraticPoly) - k - 1)
+            trueData[i - trainInterval[0], 1] = y
+        plt.plot(trainingData[:, eleNum - 1], trainingData[:, 0], 'ro')
+        plt.plot(trueData[:, 0], trueData[:, 1], 'r-')
+        plt.plot(regData[:, 1], regData[:, 0], 'bx')
+        plt.show()
+
+    def _GenerateGaussianDistribute(self, sigma, x):
         res = np.exp(- x ** x / (2 * sigma ** sigma))
         return res
 
-    def GenerateQuadraticData(self, polyData, num, interval, eleNum):
+    def _GenerateQuadraticData(self, polyData, num, interval, eleNum):
         trainData = np.zeros((num, eleNum + 1), np.float32)
         length = interval[1] - interval[0]
         for i in xrange(0, num):
             x = random.random() * length + interval[0]
-            y = polyData[0] * x ** 2 + polyData[1] * x + polyData[2] + random.gauss(0,0.5) * length
+            y = 0
+            for k in xrange(0, len(polyData) ):
+                y += polyData[k] * x ** (len(polyData) - k - 1)
+            y += random.gauss(0,0.5) * length
             trainData[i, 0] = y
             for k in xrange(1, eleNum + 1):
                 trainData[i, k] = x ** (eleNum - k)
