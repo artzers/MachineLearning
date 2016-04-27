@@ -19,14 +19,17 @@ class KMeans:
             rangeList.append(random.random() * 20.0)
         rawData = self._GenerateKClustre(2, centerList, sigmaList, clustreNumList, rangeList)
         mData = self._MergeData(rawData)
-        clustre, centers = self.Kmeans(k, mData)
-        plt.plot(centers[:, 0], centers[:, 1], 'rx', markersize=20)
-        # plt.plot(clustre[0][:, 0], clustre[0][:, 1], 'ko', markersize=5, fillstyle='none')
+        clustre, centers, iterCentroid = self.Kmeans(k, mData)
+        #plt.plot(mData[:, 0], mData[:, 1], 'rs')
+        plt.plot(centers[:, 0], centers[:, 1], 'r^', markersize=20)
+        print centers
+        plt.plot(iterCentroid[:, 0], iterCentroid[:, 1], 'kx', markersize=20)
+        # plt.plot(clustre[0][:, 0], clustre[0][:, 1], 'mo', markersize=5, fillstyle='none')
         # plt.plot(clustre[1][:, 0], clustre[1][:, 1], 'yo', markersize=5, fillstyle='none')
         # plt.plot(clustre[2][:, 0], clustre[2][:, 1], 'go', markersize=5, fillstyle='none')
         # plt.plot(clustre[3][:, 0], clustre[3][:, 1], 'bo', markersize=5, fillstyle='none')
         # plt.plot(clustre[4][:, 0], clustre[4][:, 1], 'co', markersize=5, fillstyle='none')
-        plt.plot(clustre[0][:, 0], clustre[0][:, 1], 'ko', fillstyle='none')
+        plt.plot(clustre[0][:, 0], clustre[0][:, 1], 'mo', fillstyle='none')
         plt.plot(clustre[1][:, 0], clustre[1][:, 1], 'yo', fillstyle='none')
         plt.plot(clustre[2][:, 0], clustre[2][:, 1], 'go', fillstyle='none')
         plt.plot(clustre[3][:, 0], clustre[3][:, 1], 'bo', fillstyle='none')
@@ -35,24 +38,26 @@ class KMeans:
 
     def Kmeans(self, k, data):
         centers = self._SelectSeeds(data, k)
-        iterCentroid = centers
+        iterCentroid = centers.copy()
         iterCentroidOld = np.zeros((iterCentroid.shape))
-        clustreCenter = np.zeros((centers.shape[0], data.shape[1]))
         clustreNum = np.zeros((centers.shape[0],1))
         dataTag = np.zeros((data.shape[0],1), np.uint32)
-        while np.linalg.norm(iterCentroid - iterCentroidOld) > 3:
-            iterCentroidOld = iterCentroid
+        while np.linalg.norm(iterCentroid - iterCentroidOld) > 1:
+            iterCentroidOld = iterCentroid.copy()
+            clustreCenter = np.zeros((centers.shape[0], data.shape[1]))
+            clustreNum = np.zeros((centers.shape[0], 1))
             for i in xrange(0, data.shape[0]):
-                nearestCenter, nearestIndex = self._GetNearestClustreCenter(centers, data[i, :])
+                nearestCenter, nearestIndex = self._GetNearestClustreCenter(iterCentroid, data[i, :])
                 dataTag[i] = nearestIndex
                 clustreNum[nearestIndex] += 1
                 clustreCenter[nearestIndex, :] += data[i, :]
             for i in xrange(0, iterCentroid.shape[0]):
                 iterCentroid[i, :] = clustreCenter[i, :] / clustreNum[i]
+            #print iterCentroid
         clustre = [np.zeros((0, data.shape[1])) for i in xrange(0,centers.shape[0])]
         for i in xrange(0, data.shape[0]):
             clustre[dataTag[i]] = np.vstack((clustre[dataTag[i]], data[i, :]))
-        return clustre, centers
+        return clustre, centers, iterCentroid
 
     def _MergeData(self, rawData):
         if len(rawData) == 0:
@@ -86,8 +91,15 @@ class KMeans:
     def _SelectSeeds(self, data, k):
         #row vector
         seed = np.zeros((k, data.shape[1]))
-        seed[0,:] = data[np.int32(np.random.random() * data.shape[0]), :]
-        for i in xrange(1, k):
+        distMatrix = np.zeros((data.shape[0], data.shape[0]))
+        for i in xrange(0, data.shape[0]):
+            for j in xrange(i, data.shape[0]):
+                distMatrix[i,j] = np.linalg.norm(data[i, :] - data[j, :])
+        farestPtInd = np.unravel_index(distMatrix.argmax(), distMatrix.shape)
+        seed[0, :] = data[farestPtInd[0], :]
+        seed[1, :] = data[farestPtInd[1], :]
+        #seed[0,:] = data[np.int32(np.random.random() * data.shape[0]), :]
+        for i in xrange(2, k):
             seed[i, :] = self._GetFarestData(data, seed[0:i, :])
         return seed
 
