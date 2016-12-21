@@ -73,8 +73,8 @@ int main()
 	//std::cin >> x[0].value;
 	//std::cout << "input y : " << std::endl;
 	//std::cin >> x[1].value;
-	x[0].value = 0;
-	x[1].value = 0;
+	x[0].value = 60;
+	x[1].value = -13;
 	x[2].value = -1;
 
 	double d = svm_predict(model, x);
