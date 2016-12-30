@@ -6,6 +6,7 @@
 # @Last Modified time: 2016-12-21 14:48:24
 
 import mxnet as mx
+import mxnet.optimizer as opt
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
@@ -42,14 +43,22 @@ softmax = mx.symbol.SoftmaxOutput(data=fc2, label=Y, name='softmax')
 
 batch_size = 100  
 data_shape = (batch_size, 200) 
-#mx.viz.plot_network(softmax, shape={"data":data_shape}, node_attrs={"shape":'oval',"fixedsize":'false'}).view() 
+#mx.viz.plot_network(softmax, shape={"data":data_shape}, node_attrs={"shape":'oval',"fixedsize":'false'}).view()
+
+sgd_opt = opt.SGD(learning_rate=0.0005,wd=0.0005, momentum=0.9,rescale_grad=(1.0/batch_size))#
+
+def lr_callback(epoch, symbol, arg_params, aux_params):
+    step = 100
+    if epoch % step == 0:
+        sgd_opt.lr = np.max(sgd_opt.lr * 0.85, 0.00001)
+        #print 'epoch:%d, learning rate:%f' % (epoch, sgd_opt.lr)
 
 model = mx.model.FeedForward(
             ctx=mx.gpu(),
             symbol=softmax,
-            num_epoch=5000,
-            learning_rate=0.05,
+            num_epoch=800,
             numpy_batch_size=500,
+            optimizer=sgd_opt
         )
 
 model.fit(X=X_data, y=y_data,eval_data=(X_data, y_data),
