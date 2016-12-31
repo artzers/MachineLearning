@@ -20,7 +20,7 @@ def read_content(path):
 def read_chinese_content(path):
     with codecs.open(path,encoding='utf-8') as ins:
         content = ins.read()
-        return content
+    return content.replace('\r','')[1:]
 
 # Build a vocabulary of what char we have in the content
 def build_vocab(path):
@@ -42,7 +42,7 @@ def build_chinese_vocab(path):
     idx = 1 # 0 is left for zero-padding
     the_vocab = {}
     for word in content:
-        if len(word) == 0 or word == "\n":
+        if len(word) == 0 or word == "\n" or word == '\r':
             continue
         if not word in the_vocab:
             the_vocab[word] = idx
@@ -78,7 +78,7 @@ batch_size = 32
 # We can support various length input
 # For this problem, we cut each input sentence to length of 129
 # So we only need fix length bucket
-buckets = [60]
+buckets = [10]#default[11]
 # hidden unit in LSTM cell
 num_hidden = 512
 # embedding dimension, which is, map a char to a 256 dim vector
@@ -88,16 +88,16 @@ num_lstm_layer = 3
 
 # we will show a quick demo in 2 epoch
 # and we will see result by training 75 epoch
-num_epoch = 30
+num_epoch = 100
 # learning rate
-learning_rate = 0.01
+learning_rate = 0.0000001
 # we will use pure sgd without momentum
 momentum = 0.0
 
 filePath = "./shige1.txt"#"./obama.txt"
 # build char vocabluary from input
 vocab = build_chinese_vocab(filePath)
-#vocab = build_chinese_vocab(filePath)
+#vocab = build_vocab(filePath)
 
 
 # generate symbol for a length
@@ -119,7 +119,7 @@ data_train = BucketSentenceIter(filePath, vocab, buckets, batch_size,
 # the network symbol
 symbol = sym_gen(buckets[0])
 # Train a LSTM network as simple as feedforward network
-model = mx.model.FeedForward(ctx=mx.cpu(),
+model = mx.model.FeedForward(ctx=mx.gpu(),
                              symbol=symbol,
                              num_epoch=num_epoch,
                              learning_rate=learning_rate,
@@ -131,7 +131,7 @@ model = mx.model.FeedForward(ctx=mx.cpu(),
 model.fit(X=data_train,
           eval_metric = mx.metric.np(Perplexity),
           batch_end_callback=mx.callback.Speedometer(batch_size, 50),
-          epoch_end_callback=lr_callback)#mx.callback.do_checkpoint("obama"))
+          epoch_end_callback=None)#lr_callback)#mx.callback.do_checkpoint("obama"))
 
 model.save('tutorial')
 
@@ -188,7 +188,7 @@ _, arg_params, __ = mx.model.load_checkpoint("tutorial", num_epoch)
 # build an inference model
 model = LSTMInferenceModel(num_lstm_layer, len(vocab) + 1,
                            num_hidden=num_hidden, num_embed=num_embed,
-                           num_label=len(vocab) + 1, arg_params=arg_params, ctx=mx.cpu(), dropout=0.2)
+                           num_label=len(vocab) + 1, arg_params=arg_params, ctx=mx.gpu(), dropout=0.2)
 
 # generate a sequence of 1200 chars
 
@@ -196,7 +196,7 @@ seq_length = 20
 input_ndarray = mx.nd.zeros((1,))
 revert_vocab = MakeRevertVocab(vocab)
 # Feel free to change the starter sentence
-output =revert_vocab[np.random.randint(1,len(revert_vocab)-1)]#'The joke'#
+output =revert_vocab[np.random.randint(1,len(revert_vocab)-1)]#'The joke'
 random_sample = False
 new_sentence = True
 
