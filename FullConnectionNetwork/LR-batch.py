@@ -16,7 +16,7 @@ b1 = np.zeros((fc1Dim,1))
 
 def forward(x):
 	fc1=W1.dot(x)+b1
-	sig1=sigmoid(fc1)
+	#sig1=sigmoid(fc1)
 	sig1 = fc1
 	#fc2=W2.dot(sig1)+b2
 	softmax=np.exp(sig1)
@@ -53,6 +53,15 @@ for i in xrange(0,num):
 	if i % (num/5) == 0:
 			print 'class is', int(softmax.argmax()),'softmax:',softmax,'actual value is :', x >0
 
+test = np.mat([10.0])
+_,_,res = forward(test)
+print res,res.argmax()," actually is : ", test[0]>0
 test = np.mat([-10.0])
+_,_,res = forward(test)
+print res,res.argmax()," actually is : ", test[0]>0
+test = np.mat([-60.0])
+_,_,res = forward(test)
+print res,res.argmax()," actually is : ", test[0]>0
+test = np.mat([100.0])
 _,_,res = forward(test)
 print res,res.argmax()," actually is : ", test[0]>0

@@ -5,7 +5,7 @@ import numpy as np
 X1 = np.mat(np.random.randn(100)*100-50).T
 X2 = np.mat(np.random.randn(100)*100-50).T
 X=np.column_stack((X1,X2))
-y = X1 * 2.0 + X2
+y = X1 * 3.0 + X2 * 2.0
 trainData=np.column_stack((X1,X2,y))
 
 def sigmoid(x):
@@ -88,4 +88,4 @@ test=np.column_stack((test1,test2))
 #res=predict(test)
 _,_,res=forward(test[0,:])
 print res
-print " true is : ", test[:,0]*2.0+test[:,1]
+print " true is : ", test[:,0]*3.0+test[:,1]*2.0
