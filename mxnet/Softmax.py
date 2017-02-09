@@ -54,7 +54,7 @@ def lr_callback(epoch, symbol, arg_params, aux_params):
         #print 'epoch:%d, learning rate:%f' % (epoch, sgd_opt.lr)
 
 model = mx.model.FeedForward(
-            ctx=mx.gpu(),
+            ctx=mx.cpu(),
             symbol=softmax,
             num_epoch=800,
             numpy_batch_size=500,
